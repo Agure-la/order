@@ -8,17 +8,16 @@ import org.hibernate.DuplicateMappingException;
 
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl {
 
     @Inject
     UserRepository userRepository;
     @Inject
     UserRoleRepository userRoleRepository;
 
-
-    @Override
     public Users createUser(String firstName, String lastName, String password, String mobileNo, String email) throws Exception {
 
         final Users users = new Users();
@@ -36,17 +35,18 @@ public class UserServiceImpl implements UserService{
         }
     }
 
-    @Override
+    public List<Users> findAllUsers(){
+        return (List<Users>) userRepository.findAll();
+    }
+
     public String hash(String originalString) {
        return originalString;
     }
 
-    @Override
     public Optional<Users> findUser(Integer userId) {
         return userRepository.find("id", userId).firstResultOptional();
     }
 
-    @Override
     @Transactional
     public Users updateUser(Users users) {
         final Users users1 = userRepository.getEntityManager().merge(users);
@@ -54,7 +54,6 @@ public class UserServiceImpl implements UserService{
         return users1;
     }
 
-    @Override
     public Optional<Users> delete(Integer userId) {
         final Optional<Users> user1 = findUser(userId);
         if (user1.isPresent()){
@@ -65,7 +64,6 @@ public class UserServiceImpl implements UserService{
         return user1;
     }
 
-    @Override
     public void UpdateUserPassword(Integer userId, String currentPassword, String newPassword) {
 
         final Optional<Users> user = findUser(userId);
@@ -76,29 +74,10 @@ public class UserServiceImpl implements UserService{
         }
     }
 
-    @Override
     public Optional<UserRole> findRole(String userRole) {
         return userRoleRepository.findByName(userRole);
     }
 
-    @Override
-    public Users addUserToGroup(Users users, UserRole userRole) {
-        final Users users1 = userRepository.getEntityManager().merge(users);
-        final UserRole userGroup = userRoleRepository.getEntityManager().merge(userRole);
-//        if (users1.getRoles() != null){
-//            users1.
-//        }
-//
-        return null;
-    }
-
-    @Override
-    public Optional<Users> findUser(String email, String password) {
-        return userRepository.find("Email = ?1 AND Password = ?2", email, hash(password))
-                .firstResultOptional();
-    }
-
-    @Override
     public Optional<Users> findUser(String email) {
         return userRepository.find("Email", email).firstResultOptional();
     }
