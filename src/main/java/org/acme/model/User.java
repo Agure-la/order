@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
         @UniqueConstraint(name = "Password", columnNames = "Password"),
         @UniqueConstraint(name = "Email", columnNames = "Email")
 })
-public class Users {
+public class User {
 
     @Id
     @Column(name = "UserId")

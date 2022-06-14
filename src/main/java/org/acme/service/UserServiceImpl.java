@@ -1,16 +1,19 @@
 package org.acme.service;
 
 import org.acme.model.UserRole;
-import org.acme.model.Users;
+import org.acme.model.User;
 import org.acme.repository.UserRepository;
 import org.acme.repository.UserRoleRepository;
+import org.acme.resource.request.CreateUserRequest;
 import org.hibernate.DuplicateMappingException;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Singleton
 public class UserServiceImpl {
 
     @Inject
@@ -18,14 +21,15 @@ public class UserServiceImpl {
     @Inject
     UserRoleRepository userRoleRepository;
 
-    public Users createUser(String firstName, String lastName, String password, String mobileNo, String email) throws Exception {
+    @Transactional
+    public User createUser(CreateUserRequest createUserRequest) throws Exception {
 
-        final Users users = new Users();
-        users.setFirstName(firstName);
-        users.setLastName(lastName);
-        users.setPassword(hash(password));
-        users.setMobileNo(mobileNo);
-        users.setEmail(email);
+        final User users = new User();
+        users.setFirstName(createUserRequest.getFirstName());
+        users.setLastName(createUserRequest.getLastName());
+        users.setPassword(hash(createUserRequest.getPassword()));
+        users.setMobileNo(createUserRequest.getMobileNo());
+        users.setEmail(createUserRequest.getEmail());
 
         try {
             userRepository.persistAndFlush(users);
@@ -35,30 +39,33 @@ public class UserServiceImpl {
         }
     }
 
-    public List<Users> findAllUsers(){
-        return (List<Users>) userRepository.findAll();
-    }
+//    public List<Users> findAllUsers(){
+//        return (List<Users>) userRepository.findAll();
+//    }
 
     public String hash(String originalString) {
        return originalString;
     }
 
-    public Optional<Users> findUser(Integer userId) {
+    public Optional<User> findUser(Integer userId) {
         return userRepository.find("id", userId).firstResultOptional();
     }
 
     @Transactional
-    public Users updateUser(Users users) {
-        final Users users1 = userRepository.getEntityManager().merge(users);
+    public User updateUser(User users) {
+        final User users1 = userRepository.getEntityManager().merge(users);
         userRepository.persistAndFlush(users1);
         return users1;
     }
 
-    public Optional<Users> delete(Integer userId) {
-        final Optional<Users> user1 = findUser(userId);
+    @Transactional
+    public Optional<User>  delete(Integer userId) {
+       // userRepository.delete(findUser(userId));
+        final Optional<User> user1 = findUser(userId);
         if (user1.isPresent()){
-            final Users users = user1.get();
+            final User users = user1.get();
             users.setEmail("");
+          //  userRepository.delete(users);
             userRepository.persistAndFlush(users);
         }
         return user1;
@@ -66,8 +73,8 @@ public class UserServiceImpl {
 
     public void UpdateUserPassword(Integer userId, String currentPassword, String newPassword) {
 
-        final Optional<Users> user = findUser(userId);
-        final Users secondUser = user.get();
+        final Optional<User> user = findUser(userId);
+        final User secondUser = user.get();
         if (secondUser.getPassword().equals(hash(currentPassword))){
             secondUser.setPassword(hash(newPassword));
             userRepository.persistAndFlush(secondUser);
@@ -78,7 +85,11 @@ public class UserServiceImpl {
         return userRoleRepository.findByName(userRole);
     }
 
-    public Optional<Users> findUser(String email) {
+    public Optional<User> findUser(String email) {
         return userRepository.find("Email", email).firstResultOptional();
+    }
+
+    public List<User> findUsers(){
+        return userRepository.findAll().list();
     }
 }
